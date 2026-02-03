@@ -1,0 +1,27 @@
+import { ethers } from "ethers";
+import cron from "node-cron";
+import "dotenv/config";
+
+// Base RPC
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+
+// Wallet
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
+// Daily task (runs every day at 12:00 UTC)
+cron.schedule("0 12 * * *", async () => {
+  try {
+    console.log("⏰ Running daily Base transaction...");
+
+    const tx = await wallet.sendTransaction({
+      to: process.env.TO_ADDRESS,
+      value: ethers.parseEther("0.00001"), // small tx
+    });
+
+    console.log("📤 Tx sent:", tx.hash);
+    await tx.wait();
+    console.log("✅ Tx confirmed");
+  } catch (err) {
+    console.error("❌ Transaction failed:", err);
+  }
+});
